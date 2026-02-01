@@ -8,6 +8,7 @@ import {
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -25,7 +26,7 @@ import { TypingService } from './services/typing.service';
   },
 })
 export class RealtimeGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
   server: Server;
@@ -36,14 +37,16 @@ export class RealtimeGateway
     private typingService: TypingService,
     private messagesService: MessagesService,
     private chatsService: ChatsService,
-  ) {
-    this.realtimeService.setServer(this.server);
+  ) {}
+
+  afterInit(server: Server) {
+    this.realtimeService.setServer(server);
   }
 
   handleConnection(client: Socket) {
-    // In production, authenticate via JWT from handshake
     const userId = client.handshake.auth?.userId;
     if (userId) {
+      client.join(`user:${userId}`);
       this.presenceService.setOnline(userId);
       this.realtimeService.emitPresenceUpdate(userId, 'online');
     }
@@ -73,7 +76,6 @@ export class RealtimeGateway
         userId,
         { content: data.content },
       );
-      this.realtimeService.emitMessage(data.chatId, message);
       return { success: true, message };
     } catch (error) {
       return { error: error.message };

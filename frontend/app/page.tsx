@@ -11,11 +11,15 @@ import Link from 'next/link';
 
 import { Chat } from '@/components/main/chat';
 import { Sidebar } from '@/components/main/sidebar';
+import {
+  RealtimeSubscriptions,
+} from '@/components/providers/realtime-subscriptions';
 import { env } from '@/lib/config/env.config';
 import { UserSchema } from '@/lib/dto/auth.dto';
 import type { Chat as ChatType } from '@/lib/dto/chat.dto';
 import { useAutoAuth } from '@/lib/hooks/use-auth';
 import { useCreateChat } from '@/lib/hooks/use-chats';
+import { RealtimeProvider } from '@/lib/hooks/use-socket';
 import { useAuthStore } from '@/lib/store/auth.store';
 
 export default function Home() {
@@ -74,8 +78,10 @@ export default function Home() {
 
   if (user) {
     return (
-      <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
-        <Sidebar
+      <RealtimeProvider userId={user.id}>
+        <RealtimeSubscriptions />
+        <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
+          <Sidebar
           selectedChatId={selectedChat?.id ?? null}
           onSelectChat={setSelectedChat}
           onSelectUser={handleSelectUser}
@@ -84,6 +90,7 @@ export default function Home() {
           <Chat chat={selectedChat} onClose={() => setSelectedChat(null)} />
         </div>
       </div>
+      </RealtimeProvider>
     );
   }
 

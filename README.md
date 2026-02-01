@@ -139,6 +139,12 @@ npm install
 npm run dev
 ```
 
+## План: Realtime сообщения
+
+1. **Backend**: эмиссия при HTTP — `message:new` при POST messages, `chat:created` при POST chats. EventEmitter + listener в RealtimeModule. Gateway: `user:{userId}` room для chat:created.
+2. **Frontend**: socket.io-client, `useSocket` hook, подписка на `message:new` (invalidate/optimistic), `chat:created` (invalidate chats).
+3. **Интеграция**: при открытии чата — `chat:join`, при закрытии — `chat:leave`.
+
 ## Лицензия
 
 MIT

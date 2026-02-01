@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
 
 import { NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   Test,
   TestingModule,
@@ -60,6 +61,8 @@ describe('ChatsService', () => {
     findById: jest.fn(),
   };
 
+  const mockEventEmitter = { emit: jest.fn() };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -75,6 +78,10 @@ describe('ChatsService', () => {
         {
           provide: UsersService,
           useValue: mockUsersService,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
         },
       ],
     }).compile();
@@ -111,6 +118,7 @@ describe('ChatsService', () => {
       expect(result).toBeDefined();
       expect(mockChatRepository.create).toHaveBeenCalled();
       expect(mockChatMemberRepository.save).toHaveBeenCalledTimes(3); // owner + 2 members
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('chat.created', expect.any(Object));
     });
   });
 

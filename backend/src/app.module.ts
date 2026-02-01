@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
@@ -18,6 +19,7 @@ import { UsersModule } from './users/users.module';
 @Module({
   imports: [
     ConfigurationModule,
+    EventEmitterModule.forRoot(),
     TypeOrmModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
         type: 'postgres',

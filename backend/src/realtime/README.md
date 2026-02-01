@@ -22,6 +22,10 @@
 
 ### Providers
 
+**RealtimeListener** (EventEmitter)
+- Слушает `message.created` — эмитит `message:new` в chat:{chatId}
+- Слушает `chat.created` — эмитит `chat:created` в user:{userId} всем участникам
+
 **RealtimeService**
 - `emitMessage()` - отправка сообщения через WebSocket
 - `emitTyping()` - отправка typing indicator
@@ -29,6 +33,7 @@
 - `joinChatRoom()` - присоединение к комнате чата
 - `leaveChatRoom()` - выход из комнаты чата
 - `broadcastToChat()` - широковещательная отправка в чат
+- `emitToUsers()` - отправка события указанным пользователям (user:{userId})
 
 **PresenceService**
 - `setOnline()` - установка статуса online
@@ -65,7 +70,8 @@
 - `chat:leave` - выход из чата
 
 ### Сервер -> Клиент
-- `message:new` - новое сообщение
+- `message:new` - новое сообщение (в комнату chat:{chatId}, при создании через HTTP или WebSocket)
+- `chat:created` - новый чат (в комнату user:{userId} каждому участнику)
 - `message:updated` - обновленное сообщение
 - `message:deleted` - удаленное сообщение
 - `message:status` - обновление статуса сообщения

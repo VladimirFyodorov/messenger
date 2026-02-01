@@ -1,6 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { apiClient } from '../api/client';
+import type { Message } from '../dto/chat.dto';
 import { MessageSchema } from '../dto/chat.dto';
 
 export function useMessages(chatId: string | null) {
@@ -24,8 +29,12 @@ export function useMessages(chatId: string | null) {
         .json<unknown>();
       return MessageSchema.parse(res);
     },
-    onSuccess: (_, { chatId: cid }) => {
-      queryClient.invalidateQueries({ queryKey: ['messages', cid] });
+    onSuccess: (message: Message, { chatId: cid }) => {
+      queryClient.setQueryData<Message[]>(['messages', cid], (prev) => {
+        const list = prev ?? [];
+        if (list.some((m) => m.id === message.id)) return list;
+        return [...list, message];
+      });
     },
   });
 

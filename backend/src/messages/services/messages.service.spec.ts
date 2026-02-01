@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
 
 import { ForbiddenException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   Test,
   TestingModule,
@@ -43,6 +44,10 @@ describe('MessagesService', () => {
     isUserMember: jest.fn(),
   };
 
+  const mockEventEmitter = {
+    emit: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -54,6 +59,10 @@ describe('MessagesService', () => {
         {
           provide: ChatsService,
           useValue: mockChatsService,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
         },
       ],
     }).compile();
@@ -76,11 +85,13 @@ describe('MessagesService', () => {
       mockChatsService.isUserMember.mockResolvedValue(true);
       mockMessageRepository.create.mockReturnValue(mockMessage);
       mockMessageRepository.save.mockResolvedValue(mockMessage);
+      mockMessageRepository.findOne.mockResolvedValue(mockMessage);
 
       const result = await service.createMessage('1', '1', createDto);
 
       expect(result).toEqual(mockMessage);
       expect(mockMessageRepository.create).toHaveBeenCalled();
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('message.created', expect.any(Object));
     });
 
     it('should throw ForbiddenException when user is not a member', async () => {

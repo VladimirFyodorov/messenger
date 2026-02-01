@@ -7,6 +7,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { UsersService } from '../../users/users.service';
@@ -27,16 +28,17 @@ export class ChatsService {
     private chatMembersRepository: Repository<ChatMember>,
     @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async createChat(userId: string, dto: CreateChatDto): Promise<Chat> {
-    const chat = this.chatsRepository.create({
+    const entity = this.chatsRepository.create({
       name: dto.name,
       type: dto.type,
       description: dto.description,
       avatarUrl: dto.avatarUrl ?? undefined,
     });
-    const savedChat = await this.chatsRepository.save(chat);
+    const savedChat = await this.chatsRepository.save(entity);
 
     // Add creator as owner
     await this.chatMembersRepository.save({
@@ -46,6 +48,7 @@ export class ChatsService {
     });
 
     // Add other members
+    const memberIds: string[] = [userId];
     for (const memberId of dto.memberIds) {
       if (memberId !== userId) {
         await this.chatMembersRepository.save({
@@ -53,10 +56,13 @@ export class ChatsService {
           userId: memberId,
           role: ChatRole.MEMBER,
         });
+        memberIds.push(memberId);
       }
     }
 
-    return this.findById(savedChat.id);
+    const chat = await this.findById(savedChat.id);
+    this.eventEmitter.emit('chat.created', { chat, memberIds });
+    return chat;
   }
 
   async findById(id: string): Promise<Chat> {

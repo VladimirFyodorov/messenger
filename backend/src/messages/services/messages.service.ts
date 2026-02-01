@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { ChatsService } from '../../chats/services/chats.service';
@@ -21,6 +22,7 @@ export class MessagesService {
     @InjectRepository(Message)
     private messagesRepository: Repository<Message>,
     private chatsService: ChatsService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async createMessage(
@@ -40,7 +42,10 @@ export class MessagesService {
       status: MessageStatus.SENT,
     });
 
-    return this.messagesRepository.save(message);
+    const saved = await this.messagesRepository.save(message);
+    const full = await this.findById(saved.id);
+    this.eventEmitter.emit('message.created', { chatId, message: full });
+    return full;
   }
 
   async findById(id: string): Promise<Message> {
