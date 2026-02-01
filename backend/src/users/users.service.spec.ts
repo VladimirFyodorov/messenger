@@ -8,6 +8,7 @@ import {
 import { getRepositoryToken } from '@nestjs/typeorm';
 
 import { SessionService } from '../auth/services/session.service';
+import { ChatsService } from '../chats/services/chats.service';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 
@@ -39,6 +40,10 @@ describe('UsersService', () => {
     revokeAllSessions: jest.fn(),
   };
 
+  const mockChatsService = {
+    createChat: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -50,6 +55,10 @@ describe('UsersService', () => {
         {
           provide: SessionService,
           useValue: mockSessionService,
+        },
+        {
+          provide: ChatsService,
+          useValue: mockChatsService,
         },
       ],
     }).compile();
@@ -98,7 +107,7 @@ describe('UsersService', () => {
   });
 
   describe('create', () => {
-    it('should create and return a user', async () => {
+    it('should create and return a user and create self-chat', async () => {
       const userData = { email: 'new@example.com', password: 'hashed' };
       mockRepository.create.mockReturnValue(mockUser);
       mockRepository.save.mockResolvedValue(mockUser);
@@ -108,6 +117,11 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(mockRepository.create).toHaveBeenCalledWith(userData);
       expect(mockRepository.save).toHaveBeenCalledWith(mockUser);
+      expect(mockChatsService.createChat).toHaveBeenCalledWith('1', {
+        type: 'direct',
+        memberIds: ['1'],
+        avatarUrl: '/public/self-chat.png',
+      });
     });
   });
 

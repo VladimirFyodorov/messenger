@@ -62,9 +62,10 @@ function MessageBubble({
 
 interface ChatProps {
   chat: ChatType | null;
+  onClose?: () => void;
 }
 
-export function Chat({ chat }: ChatProps) {
+export function Chat({ chat, onClose }: ChatProps) {
   const { user } = useAutoAuth();
   const { messages, isLoading, sendMessage } = useMessages(chat?.id ?? null);
   const [draft, setDraft] = useState('');
@@ -72,6 +73,15 @@ export function Chat({ chat }: ChatProps) {
 
   const isDirect = chat?.type === 'direct';
   const showSenderName = !isDirect;
+
+  useEffect(() => {
+    if (!chat || !onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [chat, onClose]);
 
   useEffect(() => {
     listRef.current?.scrollTo(0, listRef.current.scrollHeight);

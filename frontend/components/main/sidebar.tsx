@@ -1,14 +1,21 @@
 'use client';
 
-import { useRef } from 'react';
+import {
+  useRef,
+  useState,
+} from 'react';
 
 import { ChatList } from '@/components/main/chat-list';
-import type { Chat } from '@/lib/dto/chat.dto';
+import type {
+  Chat,
+  UserRef,
+} from '@/lib/dto/chat.dto';
 import {
   useAutoAuth,
   useDeleteAccount,
   useLogout,
 } from '@/lib/hooks/use-auth';
+import { useSearchChats } from '@/lib/hooks/use-chats';
 import { useUploadAvatar } from '@/lib/hooks/use-upload-avatar';
 
 function getInitials(firstName?: string | null, lastName?: string | null, email?: string) {
@@ -26,14 +33,17 @@ function getAvatarSrc(avatarUrl?: string | null) {
 interface SidebarProps {
   selectedChatId: string | null;
   onSelectChat: (chat: Chat) => void;
+  onSelectUser?: (user: UserRef) => void;
 }
 
-export function Sidebar({ selectedChatId, onSelectChat }: SidebarProps) {
+export function Sidebar({ selectedChatId, onSelectChat, onSelectUser }: SidebarProps) {
   const { user } = useAutoAuth();
   const logout = useLogout();
   const deleteAccount = useDeleteAccount();
   const uploadAvatar = useUploadAvatar();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchResult = useSearchChats(searchQuery);
 
   if (!user) return null;
 
@@ -81,8 +91,24 @@ export function Sidebar({ selectedChatId, onSelectChat }: SidebarProps) {
         </div>
         <span className="truncate text-sm font-medium text-gray-900 dark:text-white">{displayName}</span>
       </div>
+      <div className="shrink-0 px-4 pb-2">
+        <input
+          type="search"
+          placeholder="Поиск чатов и пользователей..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+          aria-label="Поиск"
+        />
+      </div>
       <div className="min-h-0 flex-1 overflow-hidden">
-        <ChatList selectedChatId={selectedChatId} onSelectChat={onSelectChat} />
+        <ChatList
+          selectedChatId={selectedChatId}
+          onSelectChat={onSelectChat}
+          onSelectUser={onSelectUser}
+          searchQuery={searchQuery}
+          searchResult={searchQuery.trim() ? searchResult : undefined}
+        />
       </div>
       <div className="shrink-0 space-y-2 p-4">
         <button

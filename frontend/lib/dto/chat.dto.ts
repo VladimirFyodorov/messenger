@@ -1,12 +1,13 @@
 import { z } from 'zod';
 
-const UserRefSchema = z.object({
+export const UserRefSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
   firstName: z.string().nullable().optional(),
   lastName: z.string().nullable().optional(),
   avatarUrl: z.string().nullable().optional(),
 });
+export type UserRef = z.infer<typeof UserRefSchema>;
 
 const ChatMemberSchema = z.object({
   id: z.string().uuid(),

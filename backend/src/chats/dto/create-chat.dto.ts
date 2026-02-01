@@ -20,6 +20,10 @@ export class CreateChatDto {
   @IsString()
   description?: string;
 
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
+
   @IsArray()
   @IsUUID('4', { each: true })
   memberIds: string[];

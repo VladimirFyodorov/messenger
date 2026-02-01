@@ -1,12 +1,16 @@
 import { Repository } from 'typeorm';
 
 import {
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { SessionService } from '../auth/services/session.service';
+import { ChatType } from '../chats/entities/chat.entity';
+import { ChatsService } from '../chats/services/chats.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User } from './entities/user.entity';
 
@@ -16,6 +20,8 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private sessionService: SessionService,
+    @Inject(forwardRef(() => ChatsService))
+    private chatsService: ChatsService,
   ) {}
 
   async findById(id: string): Promise<User> {
@@ -53,7 +59,13 @@ export class UsersService {
 
   async create(userData: Partial<User>): Promise<User> {
     const user = this.usersRepository.create(userData);
-    return this.usersRepository.save(user);
+    const saved = await this.usersRepository.save(user);
+    await this.chatsService.createChat(saved.id, {
+      type: ChatType.DIRECT,
+      memberIds: [saved.id],
+      avatarUrl: '/self-chat.png',
+    });
+    return saved;
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<User> {
@@ -84,5 +96,21 @@ export class UsersService {
     const user = await this.findById(userId);
     await this.sessionService.revokeAllSessions(userId);
     await this.usersRepository.remove(user);
+  }
+
+  /** Search users by name/email (safe fields only, no password). Excludes userId. */
+  async searchByName(query: string, excludeUserId: string): Promise<Partial<User>[]> {
+    if (!query?.trim()) return [];
+    const q = `%${query.trim()}%`;
+    const list = await this.usersRepository
+      .createQueryBuilder('u')
+      .select(['u.id', 'u.email', 'u.firstName', 'u.lastName', 'u.avatarUrl', 'u.createdAt', 'u.updatedAt'])
+      .where('u.id != :excludeUserId', { excludeUserId })
+      .andWhere(
+        '(LOWER(u.firstName) LIKE LOWER(:q) OR LOWER(u.lastName) LIKE LOWER(:q) OR LOWER(u.email) LIKE LOWER(:q))',
+        { q },
+      )
+      .getMany();
+    return list;
   }
 }

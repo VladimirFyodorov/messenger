@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -35,6 +36,14 @@ export class ChatsController {
   @Get()
   async getChats(@Request() req: ExpressRequest & { user: { id: string } }) {
     return this.chatsService.getUserChats(req.user.id);
+  }
+
+  @Get('search')
+  async searchChats(
+    @Request() req: ExpressRequest & { user: { id: string } },
+    @Query('q') q: string,
+  ) {
+    return this.chatsService.searchChats(req.user.id, q ?? '');
   }
 
   @Get(':id')

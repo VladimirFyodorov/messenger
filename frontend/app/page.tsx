@@ -15,13 +15,22 @@ import { env } from '@/lib/config/env.config';
 import { UserSchema } from '@/lib/dto/auth.dto';
 import type { Chat as ChatType } from '@/lib/dto/chat.dto';
 import { useAutoAuth } from '@/lib/hooks/use-auth';
+import { useCreateChat } from '@/lib/hooks/use-chats';
 import { useAuthStore } from '@/lib/store/auth.store';
 
 export default function Home() {
   const { user, isLoading } = useAutoAuth();
+  const createChat = useCreateChat();
   const [processingOAuth, setProcessingOAuth] = useState(false);
   const oauthHandled = useRef(false);
   const [selectedChat, setSelectedChat] = useState<ChatType | null>(null);
+
+  const handleSelectUser = (u: { id: string }) => {
+    if (!user) return;
+    createChat
+      .mutateAsync({ type: 'direct', memberIds: [user.id, u.id] })
+      .then(setSelectedChat);
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined' || oauthHandled.current) return;
@@ -66,9 +75,13 @@ export default function Home() {
   if (user) {
     return (
       <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
-        <Sidebar selectedChatId={selectedChat?.id ?? null} onSelectChat={setSelectedChat}/>
+        <Sidebar
+          selectedChatId={selectedChat?.id ?? null}
+          onSelectChat={setSelectedChat}
+          onSelectUser={handleSelectUser}
+        />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Chat chat={selectedChat} />
+          <Chat chat={selectedChat} onClose={() => setSelectedChat(null)} />
         </div>
       </div>
     );
