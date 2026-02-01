@@ -67,8 +67,49 @@ export const useLogin = () => {
 export const useGoogleAuth = () => {
   return useCallback(() => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    window.location.href = `${API_URL}/auth/google`;
+    const url = `${API_URL}/auth/google`;
+    // eslint-disable-next-line no-console
+    console.log('[OAuth] Redirecting to', url);
+    window.location.href = url;
   }, []);
+};
+
+export const useLogout = () => {
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async () => {
+      await apiClient.post('auth/logout').json();
+    },
+    onSuccess: () => {
+      clearAuth();
+      router.push('/sign-in');
+    },
+    onError: () => {
+      clearAuth();
+      router.push('/sign-in');
+    },
+  });
+};
+
+export const useDeleteAccount = () => {
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async () => {
+      await apiClient.delete('users/me').json();
+    },
+    onSuccess: () => {
+      clearAuth();
+      router.push('/sign-in');
+    },
+    onError: () => {
+      clearAuth();
+      router.push('/sign-in');
+    },
+  });
 };
 
 export const useAutoAuth = () => {

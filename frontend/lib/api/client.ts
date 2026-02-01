@@ -5,7 +5,6 @@ import {
   getAccessToken,
   getRefreshToken,
   getSessionToken,
-  setAccessToken,
 } from '../store/auth.store';
 
 export const apiClient = ky.create({
@@ -35,20 +34,21 @@ export const apiClient = ky.create({
           const refreshToken = getRefreshToken();
 
           if (refreshToken) {
-            const { accessToken: newAccessToken } = await apiClient
-              .post<{
-                message: string;
-                accessToken: string;
-              }>('auth/refresh', {
-                json: {
-                  refreshToken,
-                },
-              })
-              .json();
+            console.log('[API Client] Refreshing token');
+          //   const { accessToken: newAccessToken } = await apiClient
+          //     .post<{
+          //       message: string;
+          //       accessToken: string;
+          //     }>('auth/refresh', {
+          //       json: {
+          //         refreshToken,
+          //       },
+          //     })
+          //     .json();
 
-            setAccessToken(newAccessToken);
+          //   setAccessToken(newAccessToken);
 
-            return apiClient(request);
+          //   return apiClient(request);
           }
         }
 
