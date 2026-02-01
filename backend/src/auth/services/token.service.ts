@@ -1,21 +1,25 @@
 import * as bcrypt from 'bcrypt';
 
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class TokenService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
 
   async generateAccessToken(payload: { sub: string; email: string }): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+      expiresIn: this.configService.get<string>('auth.jwt.expiresIn') ?? '7d',
     });
   }
 
   async generateRefreshToken(payload: { sub: string }): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+      expiresIn: this.configService.get<string>('auth.jwt.refreshExpiresIn') ?? '30d',
     });
   }
 

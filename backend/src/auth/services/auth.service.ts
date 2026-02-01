@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 
@@ -16,6 +17,8 @@ import { TokenService } from './token.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private usersService: UsersService,
     private tokenService: TokenService,
@@ -146,8 +149,10 @@ export class AuthService {
     deviceInfo?: string,
     ipAddress?: string,
   ): Promise<AuthResponseDto> {
+    this.logger.log(`googleAuth profile email=${profile.email} googleId=${profile.googleId}`);
     let user = await this.usersService.findByGoogleId(profile.googleId);
     if (user) {
+      this.logger.log(`googleAuth found user by googleId id=${user.id}`);
       await this.usersService.updateFromGoogleProfile(user.id, {
         firstName: profile.firstName,
         lastName: profile.lastName,
@@ -157,6 +162,7 @@ export class AuthService {
     } else {
       const byEmail = await this.usersService.findByEmail(profile.email);
       if (byEmail) {
+        this.logger.log(`googleAuth linked existing user by email id=${byEmail.id}`);
         await this.usersService.updateGoogleId(byEmail.id, profile.googleId);
         await this.usersService.updateFromGoogleProfile(byEmail.id, {
           firstName: profile.firstName,
@@ -172,6 +178,7 @@ export class AuthService {
           lastName: profile.lastName,
           avatarUrl: profile.avatarUrl,
         });
+        this.logger.log(`googleAuth created new user id=${user.id}`);
       }
     }
 

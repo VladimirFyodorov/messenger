@@ -263,6 +263,28 @@ docker exec -it messenger-redis-1 redis-cli ping
 - **Разработка** (только БД + Redis): `docker compose -f docker-compose.dev.yml up -d`
 - **Полный стек**: `docker compose up -d` — приложение + Postgres + Redis
 
+## Миграции
+
+Конфиг для TypeORM CLI: `src/data-source.ts` (читает `DB_*` из `.env`).
+
+**Запуск миграций** (применить все неприменённые):
+```bash
+npm run migration:run
+```
+
+**Создать миграцию по диффу с текущей схемой БД** (имя — любое):
+```bash
+npm run migration:generate -- src/migrations/AddUserCascadeFk
+```
+Файл появится в `src/migrations/`. Затем выполни `npm run migration:run`.
+
+**Откатить последнюю миграцию:**
+```bash
+npm run migration:revert
+```
+
+Если в dev включён `synchronize: true`, при старте приложения TypeORM сам обновляет схему (в т.ч. CASCADE на FK). Миграции нужны, когда `synchronize` выключен (например, в production).
+
 ## Переменные окружения
 
 Создайте файл `.env` в корне backend:

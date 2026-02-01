@@ -1,18 +1,24 @@
-import { Request as ExpressRequest, Response } from 'express';
+import {
+  Request as ExpressRequest,
+  Response,
+} from 'express';
 
 import {
   Body,
   Controller,
   Delete,
   Get,
+  Logger,
   Param,
   Post,
   Request,
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 
+import { Config } from '../config/types';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -23,9 +29,12 @@ import { GoogleProfile } from './strategies/google.strategy';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private authService: AuthService,
     private sessionService: SessionService,
+    private configService: ConfigService<Config>,
   ) {}
 
   @Post('register')
@@ -74,6 +83,7 @@ export class AuthController {
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async google() {
+    this.logger.log('GET /auth/google — redirecting to Google');
     // Guard redirects to Google; handler unused
   }
 
@@ -83,16 +93,20 @@ export class AuthController {
     @Request() req: ExpressRequest & { user: GoogleProfile },
     @Res() res: Response,
   ) {
+    this.logger.log(`GET /auth/google/callback — profile email=${req.user.email} googleId=${req.user.googleId}`);
     const result = await this.authService.googleAuth(
       req.user,
       req.headers['user-agent'] as string,
       req.ip,
     );
-    const base = process.env.OAUTH_SUCCESS_REDIRECT_URL ?? 'http://localhost:3001';
-    const q = new URLSearchParams({
-      access_token: result.accessToken,
-      refresh_token: result.refreshToken,
-    });
-    return res.redirect(`${base}?${q.toString()}`);
+    const base = this.configService.get('auth.oauthSuccessRedirectUrl', { infer: true });
+    if (!base) {
+      throw new Error('OAuth success redirect URL is not configured');
+    }
+    const accessToken = result.accessToken;
+    const refreshToken = result.refreshToken;
+    this.logger.log(`GET /auth/google/callback — redirecting to ${base}#access_token=...&refresh_token=... (lengths: ${accessToken.length}, ${refreshToken.length})`);
+    const hash = `#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}`;
+    return res.redirect(`${base}${hash}`);
   }
 }
