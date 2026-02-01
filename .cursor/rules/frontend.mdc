@@ -1,0 +1,35 @@
+---
+description: Frontend — Next.js 16 App Router, React 19, TypeScript
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Frontend (Next.js)
+
+## Стек и версии
+
+- **Next.js** 16 (App Router), **React** 19, **TypeScript** 5.
+- **Tailwind** v4 для стилей. ESLint + eslint-config-next.
+
+## Структура
+
+- `app/` — роуты, `layout.tsx`, `page.tsx`. Файловая маршрутизация.
+- Компоненты — в `app/` рядом с роутами или в общей папке `components/` по договорённости.
+- Стили — `globals.css`, Tailwind-классы. Избегай инлайновых стилей, если не необходимо.
+
+## Конвенции
+
+- **Server Components** по умолчанию. `"use client"` только при использовании state, эффектов, браузерных API.
+- Типизируй props и состояние. Не используй `any`.
+- Именование: компоненты `PascalCase`, файлы `kebab-case` или `PascalCase` для компонентов (единообразие в проекте).
+
+## Данные и API
+
+- Вызовы к backend — через `fetch` или отдельный API-клиент. Обрабатывай ошибки и loading-состояния.
+- Секреты и ключи — только на сервере (env). Не передавай в клиентский код.
+
+## Verification
+
+- [ ] Роуты и компоненты соответствуют App Router.
+- [ ] Нет `any` без причины, стили через Tailwind.
+- [ ] README в затронутых модулях обновлён.

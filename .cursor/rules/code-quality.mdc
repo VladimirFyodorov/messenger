@@ -1,0 +1,52 @@
+---
+description: Качество кода — TypeScript, именование, ошибки, производительность
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Качество кода
+
+## TypeScript
+
+- Соблюдай **strict** режим: `strictNullChecks`, `noImplicitAny` (уже в tsconfig). Не используй `any` без веской причины.
+- Явно типизируй параметры, возвращаемые значения, generics. Избегай неявного `any`.
+
+## Именование
+
+- **Файлы**: `kebab-case` (например `users.service.ts`, `update-profile.dto.ts`).
+- **Классы/сервисы**: `PascalCase`. **Функции/методы**: `camelCase`.
+- **Константы**: `UPPER_SNAKE` или `camelCase` по контексту. Единообразие в рамках модуля.
+
+## Обработка ошибок
+
+- Используй **guard clauses** и **early return**. Избегай глубокой вложенности.
+- Не глотай ошибки: в `catch` логируй и пробрасывай дальше или бросай осмысленное исключение (например, `NotFoundException`).
+
+```typescript
+// ❌ BAD
+try {
+  await doSomething();
+} catch {}
+
+// ✅ GOOD
+try {
+  await doSomething();
+} catch (e) {
+  this.logger.error('doSomething failed', { error: e });
+  throw new InternalServerErrorException('Operation failed');
+}
+```
+
+- В сервисах используй **NestJS HTTP-исключения** (`NotFoundException`, `BadRequestException`, `ConflictException` и т.д.) там, где уместно.
+
+## Производительность
+
+- Избегай **N+1** в TypeORM: используй `relations`, `join`, `QueryBuilder` с `leftJoinAndSelect` при необходимости.
+- Не делай тяжёлые операции в циклах. Выноси в batch-запросы или очереди (Bull), если нужно.
+- Кеширование (Redis и т.п.) — по мере надобности, не усложняй без причины.
+
+## Verification
+
+- [ ] Нет необоснованного `any`.
+- [ ] Именование соответствует конвенциям проекта.
+- [ ] Ошибки обрабатываются явно, не глушатся.

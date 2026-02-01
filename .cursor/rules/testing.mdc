@@ -1,0 +1,41 @@
+---
+description: Тестирование — unit, integration, паттерны, пишем тесты вместе с фичей
+globs: "**/*.spec.ts"
+alwaysApply: false
+---
+
+# Тестирование
+
+## Когда писать тесты
+
+- Тесты пиши **в той же сессии/PR**, что и реализацию. Не откладывай на потом.
+- Покрывай новый код unit- или integration-тестами в зависимости от слоя (сервис → unit с моками, API → e2e/integration).
+
+## Инструменты (backend)
+
+- **Jest** + **@nestjs/testing**.
+- Моки репозиториев: `getRepositoryToken(Entity)`, `useValue: { findOne: jest.fn(), ... }`.
+- `beforeEach` / `afterEach`: сбрасывай моки (`jest.clearAllMocks()`), инициализируй чистое состояние.
+
+## Структура тестов
+
+- `describe` по модулю/сервису, вложенные `describe` по методу или сценарию.
+- Один `it` — один сценарий. Названия вида: `should return user when found`, `should throw NotFoundException when user not found`.
+- Arrange–Act–Assert: подготовка → вызов → проверка `expect`.
+
+## Unit-тесты (сервисы)
+
+- Мокай все зависимости (TypeORM Repository, другие сервисы, ConfigService).
+- Проверяй и **успешные** пути, и **ошибки** (например, `NotFoundException`).
+- Не тестируй реализацию TypeORM/фреймворка — тестируй логику сервиса.
+
+## Integration / e2e
+
+- При e2e используй тестовую БД (отдельная schema или in-memory). Не трогай прод.
+- Supertest для HTTP. При необходимости поднимай `TestingModule` с реальными модулями (БД, Redis — по договорённости).
+
+## Verification
+
+- [ ] Новый код покрыт тестами.
+- [ ] `npm run test` (или `yarn test`) проходит.
+- [ ] Тесты изолированы, моки сбрасываются в `afterEach`.

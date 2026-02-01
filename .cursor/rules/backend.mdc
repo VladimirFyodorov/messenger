@@ -1,0 +1,66 @@
+---
+description: Backend — NestJS 10, TypeORM, class-validator, примеры и deprecated
+globs: backend/**/*.ts
+alwaysApply: false
+---
+
+# Backend (NestJS)
+
+## Стек и версии
+
+- **NestJS** 10.x, **TypeORM** 0.3.x, **class-validator** / **class-transformer**.
+- **PostgreSQL**, **Redis** (Bull), **Socket.io** (@nestjs/platform-socket.io).
+- Явно используй декораторы и API из этих версий. Не смешивай с NestJS 9 или старым TypeORM.
+
+## Структура модуля
+
+- `module.ts` — импорты, `imports`/`providers`/`controllers`/`exports`.
+- `*.controller.ts` — HTTP-эндпоинты, guard'ы, минимальная логика.
+- `*.service.ts` — бизнес-логика, работа с репозиториями.
+- `dto/` — DTO с class-validator. `entities/` — TypeORM-сущности.
+- В каждом модуле/папке — **README** (что есть, план, самари).
+
+## Контроллеры
+
+- Роут и метод из `@Controller`, `@Get`, `@Post`, `@Patch`, `@Delete`.
+- Вход — **DTO** с валидацией. Выход — сущность или response-DTO. Не возвращай сырые entity с паролями.
+- `@UseGuards(JwtAuthGuard)` там, где нужна авторизация. `@Request() req` для `req.user`.
+
+## Сервисы и репозитории
+
+- Инжектить репозиторий через `@InjectRepository(Entity)`. Логика — в сервисе, не в контроллере.
+- Для сложных запросов — `QueryBuilder`, `relations`, без N+1.
+
+## Валидация (DTO)
+
+```typescript
+// ✅ GOOD — явные декораторы
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
+
+export class CreateUserDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  password: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+}
+```
+
+- В `main.ts` или глобально: `ValidationPipe` с `whitelist: true`, при необходимости `forbidNonWhitelisted: true`.
+
+## Deprecated — не использовать
+
+- **Не** использовать `@InjectConnection()` для произвольных raw-запросов без необходимости. Предпочитать репозитории и QueryBuilder.
+- **Не** держать секреты в коде. Только `ConfigService` / env.
+- **Не** использовать `any` для `req.user`. Типизировать через JWT payload / свой интерфейс.
+
+## Verification
+
+- [ ] Модули следуют структуре (controller / service / dto / entities).
+- [ ] DTO валидируются, секреты не логируются и не отдаются в ответах.
+- [ ] Используются актуальные API NestJS 10 и TypeORM 0.3.
