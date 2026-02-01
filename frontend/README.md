@@ -305,3 +305,56 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
 - WebSocket для real-time коммуникации
 - JWT токены для аутентификации
 - Google OAuth2 для социального входа
+
+## Реализовано: Страницы регистрации и входа
+
+### ✅ Выполнено
+
+1. **Установлены зависимости**
+   - @tanstack/react-query
+   - react-hook-form
+   - zod
+   - zustand
+   - @hookform/resolvers
+
+2. **Настроено окружение**
+   - Создан `.env.local` с `NEXT_PUBLIC_API_URL=http://localhost:3000`
+
+3. **Создана структура**
+   - `lib/api/client.ts` - API клиент с базовым URL из env
+   - `lib/store/auth.store.ts` - Zustand store для аутентификации с persist
+   - `lib/hooks/use-auth.ts` - хуки useRegister, useLogin, useGoogleAuth
+   - `components/auth/auth-form.tsx` - переиспользуемая форма
+   - `components/providers/query-provider.tsx` - провайдер для TanStack Query
+   - `app/sign-up/page.tsx` - страница регистрации
+   - `app/sign-in/page.tsx` - страница входа
+
+4. **Реализована форма**
+   - Валидация через zod (email, password min 8 символов, confirmPassword для регистрации)
+   - Интеграция с react-hook-form
+   - Обработка ошибок от API
+   - Кнопка Google OAuth (редирект на `/auth/google`)
+
+5. **Интеграция с API**
+   - POST `/auth/register` - регистрация
+   - POST `/auth/login` - вход
+   - GET `/auth/google` - инициация Google OAuth
+   - Обработка ответов и сохранение токенов в store
+   - Автоматический редирект на главную после успешной аутентификации
+
+### Как проверить
+
+1. Запустить frontend: `npm run dev` (порт 3000)
+2. Запустить backend: убедиться, что API доступен на `http://localhost:3000`
+3. Открыть `/sign-up` - страница регистрации
+4. Открыть `/sign-in` - страница входа
+5. Проверить валидацию формы
+6. Проверить регистрацию/вход через email/password
+7. Проверить кнопку Google OAuth (редирект на `/auth/google`)
+
+### Дальнейшие шаги
+
+- Добавить обработку callback для Google OAuth (`/auth/google/callback`)
+- Добавить обработку ошибок сети
+- Добавить loading states
+- Добавить ссылки между страницами регистрации и входа
