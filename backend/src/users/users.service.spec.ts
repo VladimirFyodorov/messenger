@@ -7,6 +7,7 @@ import {
 } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
+import { SessionService } from '../auth/services/session.service';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 
@@ -31,6 +32,11 @@ describe('UsersService', () => {
     findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
+    remove: jest.fn(),
+  };
+
+  const mockSessionService = {
+    revokeAllSessions: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -40,6 +46,10 @@ describe('UsersService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockRepository,
+        },
+        {
+          provide: SessionService,
+          useValue: mockSessionService,
         },
       ],
     }).compile();
@@ -113,6 +123,26 @@ describe('UsersService', () => {
 
       expect(result).toEqual(updatedUser);
       expect(mockRepository.save).toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteAccount', () => {
+    it('should revoke all sessions and remove user', async () => {
+      mockRepository.findOne.mockResolvedValue(mockUser);
+      mockSessionService.revokeAllSessions.mockResolvedValue(undefined);
+      mockRepository.remove.mockResolvedValue(mockUser);
+
+      await service.deleteAccount('1');
+
+      expect(mockSessionService.revokeAllSessions).toHaveBeenCalledWith('1');
+      expect(mockRepository.remove).toHaveBeenCalledWith(mockUser);
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.deleteAccount('1')).rejects.toThrow(NotFoundException);
+      expect(mockSessionService.revokeAllSessions).not.toHaveBeenCalled();
     });
   });
 });

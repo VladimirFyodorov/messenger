@@ -3,6 +3,7 @@ import { Request as ExpressRequest } from 'express';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -42,5 +43,10 @@ export class UsersController {
   @Patch('me/settings')
   async updateSettings(@Request() req: ExpressRequest & { user: { id: string } }, @Body() settings: Record<string, any>) {
     return this.usersService.updateSettings(req.user.id, settings);
+  }
+
+  @Delete('me')
+  async deleteAccount(@Request() req: ExpressRequest & { user: { id: string } }) {
+    await this.usersService.deleteAccount(req.user.id);
   }
 }

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { SessionService } from '../auth/services/session.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User } from './entities/user.entity';
 
@@ -14,6 +15,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private sessionService: SessionService,
   ) {}
 
   async findById(id: string): Promise<User> {
@@ -76,5 +78,11 @@ export class UsersService {
   async getSettings(userId: string): Promise<Record<string, any>> {
     const user = await this.findById(userId);
     return user.settings || {};
+  }
+
+  async deleteAccount(userId: string): Promise<void> {
+    const user = await this.findById(userId);
+    await this.sessionService.revokeAllSessions(userId);
+    await this.usersRepository.remove(user);
   }
 }
