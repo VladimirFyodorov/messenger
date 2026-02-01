@@ -59,6 +59,27 @@ messenger/
 
 ### Этап 2: Backend - Базовая функциональность
 - [ ] AuthModule: регистрация, логин, JWT, Google OAuth2
+
+#### План работ: Google OAuth2
+
+1. **GoogleStrategy** (`backend/src/auth/strategies/google.strategy.ts`): Passport + `passport-google-oauth20`, env `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, callback `/auth/google/callback`; в `validate()` возвращать профиль (email, googleId, firstName, lastName, avatarUrl).
+
+2. **AuthService**:
+   - Метод `googleAuth(profile)`: поиск по `googleId` → обновление или создание/привязка по email; генерация access/refresh, создание сессии, возврат `AuthResponseDto`.
+
+3. **AuthController**:
+   - `GET /auth/google` — `@UseGuards(AuthGuard('google'))`, инициация OAuth.
+   - `GET /auth/google/callback` — `@UseGuards(AuthGuard('google'))`, вызов `authService.googleAuth(req.user)`.
+
+4. **AuthModule**: зарегистрировать `GoogleStrategy` в `providers`.
+
+5. **UsersService**: `findByGoogleId(googleId)`, `updateGoogleId(userId, googleId)`; `create()` — поддержка пользователя без пароля.
+
+6. **Тесты**: unit для GoogleStrategy и `googleAuth()`, интеграционные для `/auth/google` и `/auth/google/callback`.
+
+7. **Env и конфиг**: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`; в Google Cloud Console — redirect URI `http://localhost:3000/auth/google/callback` (или актуальный origin).
+
+Подробности: `backend/src/auth/README.md`.
 - [ ] UsersModule: профили, аватары, настройки
 - [ ] ChatsModule: создание чатов, участники, роли
 - [ ] MessagesModule: отправка/получение сообщений, статусы
